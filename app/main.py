@@ -23,10 +23,10 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return crud.create_user(db=db, user=user)
 
 
-# @app.get("/users/", response_model=list[schemas.User])
-# def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-#     users = crud.get_users(db, skip=skip, limit=limit)
-#     return users
+@app.get("/users/", response_model=list[schemas.User])
+def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    users = crud.get_users(db, skip=skip, limit=limit)
+    return users
 
 
 @app.get("/users/{user_id}", response_model=schemas.User)
@@ -37,51 +37,18 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
     return db_user
 
 
-# @app.put("/users/{user_id}", response_model=schemas.User)
-# def update_user(user_id: int, user: schemas.UserUpdate, db: Session = Depends(get_db)):
-#     db_user = crud.update_user(db, user_id=user_id, user_update=user)
-#     if db_user is None:
-#         raise HTTPException(status_code=404, detail="User not found")
-#     return db_user
+@app.put("/users/{user_id}", response_model=schemas.User)
+def update_user(user_id: int, user: schemas.UserUpdate, db: Session = Depends(get_db)):
+    db_user = crud.update_user(db, user_id=user_id, user_update=user)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
 
 
-# @app.delete("/users/{user_id}", response_model=schemas.User)
-# def delete_user(user_id: int, db: Session = Depends(get_db)):
-#     db_user = crud.delete_user(db, user_id=user_id)
-#     if db_user is None:
-#         raise HTTPException(status_code=404, detail="User not found")
-#     return db_user
+@app.delete("/users/{user_id}", response_model=schemas.User)
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    db_user = crud.delete_user(db, user_id=user_id)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
 
-
-@app.get("/thirdparty/posts/{post_id}", response_model=schemas.ExternalPost)
-def get_external_post(post_id: int):
-    url = f"https://jsonplaceholder.typicode.com/posts/{post_id}"
-    try:
-        with request.urlopen(url) as resp:
-            if resp.status != 200:
-                raise HTTPException(status_code=resp.status, detail="Third-party request failed")
-            return json.load(resp)
-    except HTTPException:
-        raise
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
-
-
-@app.post("/thirdparty/posts", response_model=schemas.ExternalPost)
-def create_external_post(post: schemas.ExternalPostCreate):
-    data = json.dumps(post.dict()).encode()
-    req = request.Request(
-        "https://jsonplaceholder.typicode.com/posts",
-        data=data,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    try:
-        with request.urlopen(req) as resp:
-            if resp.status != 201:
-                raise HTTPException(status_code=resp.status, detail="Third-party request failed")
-            return json.load(resp)
-    except HTTPException:
-        raise
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
